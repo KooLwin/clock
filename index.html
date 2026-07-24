@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Learning Clock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100vw;
+            width: 100dvw;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 10px;
+        }
+
+        .clock-container {
+            max-width: 1400px;
+            width: 100%;
+            max-height: 98vh;
+            max-height: 98dvh;
+            aspect-ratio: 16 / 9;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 14px 24px 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid #f0f0f0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            margin-bottom: 4px;
+            padding: 0 4px;
+        }
+        h1 {
+            font-size: clamp(1rem, 2.2vw, 1.8rem);
+            font-weight: 400;
+            color: #1e293b;
+            letter-spacing: 1px;
+            background: transparent;
+            padding: 2px 12px;
+            border-radius: 30px;
+            border: 1px solid #e9edf2;
+        }
+        .digital-display {
+            font-size: clamp(1.4rem, 3.2vw, 2.8rem);
+            font-weight: 600;
+            color: #0b2b4a;
+            background: #f8fafc;
+            padding: 4px 18px;
+            border-radius: 50px;
+            letter-spacing: 3px;
+            border: 1px solid #e2e8f0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .canvas-wrapper {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 0;
+            background: #ffffff;
+            border-radius: 40px;
+            margin: 4px 0 8px;
+            width: 100%;
+        }
+        #clockCanvas {
+            display: block;
+            max-height: 62vh;
+            max-height: 62dvh;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #ffffff;
+            border-radius: 100%;
+            touch-action: none;
+            cursor: grab;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px #eef2f6;
+        }
+        #clockCanvas:active {
+            cursor: grabbing;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            justify-content: center;
+            align-items: center;
+            margin: 3px 0 5px;
+        }
+        .controls-row button {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: clamp(0.6rem, 1vw, 0.85rem);
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            transition: 0.12s ease;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f8fafc;
+        }
+        .controls-row button:hover {
+            background: #e9edf2;
+            border-color: #cbd5e1;
+        }
+        .controls-row button:active {
+            transform: scale(0.96);
+        }
+        .controls-row button.active-mode {
+            background: #1e3a5f;
+            border-color: #1e3a5f;
+            color: white;
+            box-shadow: 0 2px 6px rgba(30, 58, 95, 0.15);
+        }
+        .mode-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: #f8fafc;
+            padding: 4px 8px;
+            border-radius: 40px;
+            border: 1px solid #e9edf2;
+        }
+        .mode-group .mode-btn {
+            background: transparent;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: clamp(0.55rem, 0.9vw, 0.8rem);
+            font-weight: 500;
+            color: #475569;
+            border: 1px solid transparent;
+        }
+        .mode-group .mode-btn:hover {
+            background: #e9edf2;
+        }
+        .mode-group .mode-btn.active-mode {
+            background: #1e3a5f;
+            color: white;
+            border-color: #1e3a5f;
+        }
+
+        .info-panel {
+            background: #f8fafc;
+            border-radius: 40px;
+            padding: 6px 14px;
+            margin-top: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 4px 18px;
+            border: 1px solid #e9edf2;
+            font-size: clamp(0.6rem, 1vw, 0.9rem);
+            color: #1e293b;
+        }
+        .info-panel .info-item {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .info-panel .label {
+            font-weight: 300;
+            color: #64748b;
+        }
+        .info-panel .value {
+            font-weight: 600;
+            color: #0b2b4a;
+            background: white;
+            padding: 0 10px;
+            border-radius: 30px;
+            min-width: 28px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            font-variant-numeric: tabular-nums;
+        }
+        #extraInfo, #fractionInfo {
+            display: none;
+        }
+        #extraInfo .value, #fractionInfo .value {
+            color: #2563eb;
+        }
+
+        .time-in-words {
+            text-align: center;
+            font-size: clamp(1rem, 1.8vw, 1.6rem);
+            font-weight: 500;
+            color: #0b2b4a;
+            background: #f1f5f9;
+            padding: 6px 18px;
+            border-radius: 60px;
+            border: 1px solid #e2e8f0;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+            min-height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 700px) {
+            .clock-container { padding: 10px 12px 14px; border-radius: 20px; }
+            .controls-row button { padding: 3px 10px; font-size: 0.6rem; }
+            .mode-group .mode-btn { padding: 2px 8px; font-size: 0.55rem; }
+            .info-panel { padding: 4px 10px; gap: 3px 10px; font-size: 0.55rem; }
+            .time-in-words { font-size: 0.8rem; padding: 4px 12px; min-height: 2.2rem; }
+        }
+        @media (orientation: portrait) {
+            .clock-container { max-height: 98vh; aspect-ratio: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="clock-container">
+    <div class="header">
+        <h1>🕒 Kreative Clock</h1>
+        <div class="digital-display" id="digitalDisplay">12:00:00</div>
+    </div>
+
+    <div class="canvas-wrapper">
+        <canvas id="clockCanvas" width="600" height="600"></canvas>
+    </div>
+
+    <div class="controls-row">
+        <button id="realTimeBtn">▶ Now</button>
+        <button id="randomBtn">🎲 Ramdom</button>
+        <button id="resetBtn">↺ Restart</button>
+        <div class="mode-group" id="modeGroup">
+            <button class="mode-btn active-mode" data-mode="time">⏰ Time</button>
+            <button class="mode-btn" data-mode="angles">📐 Angle</button>
+            <button class="mode-btn" data-mode="fractions">➗ Divided</button>
+            <button class="mode-btn" data-mode="style">🎨 Color</button>
+        </div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        <span class="info-item"><span class="value" id="hourDisplay">12</span><span class="label">o'clock</span></span>
+        <span class="info-item"><span class="value" id="minuteDisplay">00</span><span class="label">Minute</span></span>
+        <span class="info-item"><span class="value" id="secondDisplay">00</span><span class="label">Second</span></span>
+        <span class="info-item" id="extraInfo"><span class="label">Degree</span> <span class="value" id="angleDisplay">0°</span></span>
+        <span class="info-item" id="fractionInfo"><span class="label">Subdivision</span> <span class="value" id="fractionDisplay">0/60</span></span>
+    </div>
+
+    <div class="time-in-words" id="timeInWords">twelve o'clock</div>
+</div>
+
+<script>
+    (function() {
+        const canvas = document.getElementById('clockCanvas');
+        const ctx = canvas.getContext('2d');
+        const digitalDisplay = document.getElementById('digitalDisplay');
+        const timeInWords = document.getElementById('timeInWords');
+
+        let currentMode = 'time';
+        let isRealTime = false;
+        let realTimeInterval = null;
+
+        let hourDeg = 0;
+        let minuteDeg = 0;
+        let secondDeg = 0;
+
+        let previousMinuteDeg = 0;
+        let hourOffset = 0;
+
+        let isDragging = false;
+        let dragTarget = null;
+
+        let colors = {
+            face: '#ffffff',
+            numbers: '#1e293b',
+            hourHand: '#1e3a5f',
+            minuteHand: '#2563eb',
+            secondHand: '#dc2626',
+        };
+
+        let showAngleArc = false;
+
+        function getTimeInWords(hours, minutes) {
+            const hourNames = [
+                "twelve", "one", "two", "three", "four", "five", "six",
+                "seven", "eight", "nine", "ten", "eleven", "twelve"
+            ];
+            
+
+            let h = hours % 12;
+            if (h === 0) h = 12;
+            
+            const m = minutes;
+            
+            if (m === 0) {
+                return `${hourNames[h]} o'clock`;
+            } else if (m === 15) {
+                return `quarter past ${hourNames[h]}`;
+            } else if (m === 30) {
+                return `half past ${hourNames[h]}`;
+            } else if (m === 45) {
+                let nextHour = (h % 12) + 1;
+                if (nextHour === 13) nextHour = 1;
+                return `quarter to ${hourNames[nextHour]}`;
+            } else if (m < 30) {
+
+                if (m === 1) return `one minute past ${hourNames[h]}`;
+                return `${m} minutes past ${hourNames[h]}`;
+            } else {
+
+                let nextHour = (h % 12) + 1;
+                if (nextHour === 13) nextHour = 1;
+                let minutesTo = 60 - m;
+                if (minutesTo === 1) return `one minute to ${hourNames[nextHour]}`;
+                return `${minutesTo} minutes to ${hourNames[nextHour]}`;
+            }
+        }
+
+        function degToRad(deg) { return deg * Math.PI / 180; }
+
+        function setTime(hours, minutes, seconds) {
+            hourDeg = (hours % 12) * 30 + minutes * 0.5 + seconds * (0.5 / 60);
+            minuteDeg = minutes * 6 + seconds * 0.1;
+            secondDeg = seconds * 6;
+            previousMinuteDeg = minuteDeg;
+            hourOffset = Math.floor(minuteDeg / 360) * 30;
+            drawClock();
+            updateDigitalDisplay(hours, minutes, seconds);
+            updateInfoPanel(hours, minutes, seconds);
+            timeInWords.textContent = getTimeInWords(hours, minutes);
+        }
+
+        function updateHourHandFromMinute(minuteDegValue) {
+            let diff = minuteDegValue - previousMinuteDeg;
+            
+            if (diff > 300) {
+                hourOffset -= 30;
+            } else if (diff < -300) {
+                hourOffset += 30;
+            }
+            
+            hourDeg = (minuteDegValue / 12) + hourOffset;
+            previousMinuteDeg = minuteDegValue;
+        }
+
+        function getCurrentTime() {
+            const now = new Date();
+            return { hours: now.getHours(), minutes: now.getMinutes(), seconds: now.getSeconds() };
+        }
+
+        function setRandomTime() {
+            const h = Math.floor(Math.random() * 12);
+            const m = Math.floor(Math.random() * 60);
+            const s = Math.floor(Math.random() * 60);
+            setTime(h, m, s);
+        }
+
+        function resetClock() {
+            if (isRealTime) toggleRealTime();
+            setTime(12, 0, 0);
+        }
+
+        function updateDigitalDisplay(h, m, s) {
+            const pad = n => String(n).padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 === 0 ? 12 : h % 12;
+            digitalDisplay.textContent = `${pad(h12)}:${pad(m)}:${pad(s)} ${ampm}`;
+        }
+
+        function updateInfoPanel(h, m, s) {
+            document.getElementById('hourDisplay').textContent = h;
+            document.getElementById('minuteDisplay').textContent = String(m).padStart(2, '0');
+            document.getElementById('secondDisplay').textContent = String(s).padStart(2, '0');
+            const angle = calculateAngle(hourDeg, minuteDeg);
+            document.getElementById('angleDisplay').textContent = Math.round(angle) + '°';
+            const fraction = m + s/60;
+            document.getElementById('fractionDisplay').textContent = `${Math.round(fraction)}/60`;
+        }
+
+        function calculateAngle(hourDeg, minuteDeg) {
+            let diff = Math.abs(hourDeg - minuteDeg);
+            diff = Math.min(diff, 360 - diff);
+            return diff;
+        }
+
+        function getTimeFromDegrees() {
+            let h = hourDeg / 30;
+            let m = minuteDeg / 6;
+            let s = secondDeg / 6;
+            h = (h % 12 + 12) % 12;
+            m = (m % 60 + 60) % 60;
+            s = (s % 60 + 60) % 60;
+            return { h: Math.floor(h), m: Math.floor(m), s: Math.floor(s) };
+        }
+
+        function drawClock() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const radius = Math.min(w, h) * 0.43;
+            const cx = w/2, cy = h/2;
+
+            ctx.clearRect(0, 0, w, h);
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, 2*Math.PI);
+            ctx.fillStyle = colors.face;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#d1d9e6';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = colors.numbers;
+            ctx.font = `bold ${radius * 0.16}px 'Segoe UI', system-ui, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for (let i = 1; i <= 12; i++) {
+                const angle = degToRad(i * 30 - 90);
+                const numX = cx + Math.cos(angle) * (radius * 0.82);
+                const numY = cy + Math.sin(angle) * (radius * 0.82);
+                ctx.shadowColor = 'rgba(0,0,0,0.03)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(i, numX, numY);
+            }
+            ctx.shadowBlur = 0;
+
+            for (let i = 0; i < 60; i++) {
+                const angle = degToRad(i * 6 - 90);
+                const outer = radius * 0.94;
+                const inner = (i % 5 === 0) ? radius * 0.87 : radius * 0.92;
+                const x1 = cx + Math.cos(angle) * outer;
+                const y1 = cy + Math.sin(angle) * outer;
+                const x2 = cx + Math.cos(angle) * inner;
+                const y2 = cy + Math.sin(angle) * inner;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = (i % 5 === 0) ? '#1e293b' : '#94a3b8';
+                ctx.lineWidth = (i % 5 === 0) ? 3 : 1.5;
+                ctx.shadowBlur = 2;
+                ctx.shadowColor = 'rgba(0,0,0,0.04)';
+                ctx.stroke();
+            }
+            ctx.shadowBlur = 0;
+
+            drawHand(cx, cy, secondDeg, radius * 0.82, 2.5, colors.secondHand, true);
+            drawHand(cx, cy, minuteDeg, radius * 0.70, 6, colors.minuteHand, false);
+            drawHand(cx, cy, hourDeg, radius * 0.52, 8, colors.hourHand, false);
+
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(0,0,0,0.08)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.045, 0, 2*Math.PI);
+            ctx.fillStyle = '#1e293b';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            if (currentMode === 'angles' && showAngleArc) {
+                const angle = calculateAngle(hourDeg, minuteDeg);
+                const start = degToRad(Math.min(hourDeg, minuteDeg) - 90);
+                const end = degToRad(Math.max(hourDeg, minuteDeg) - 90);
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius * 0.48, start, end);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 5;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = 'rgba(245, 158, 11, 0.25)';
+                ctx.setLineDash([6, 6]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.shadowBlur = 0;
+            }
+
+            if (currentMode === 'fractions') {
+                const minuteAngle = degToRad(minuteDeg - 90);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, radius * 0.38, degToRad(-90), minuteAngle);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(37, 99, 235, 0.15)';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(37, 99, 235, 0.1)';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            }
+        }
+
+        function drawHand(cx, cy, deg, length, width, color, isSecond) {
+            const rad = degToRad(deg - 90);
+            const endX = cx + Math.cos(rad) * length;
+            const endY = cy + Math.sin(rad) * length;
+            ctx.shadowColor = 'rgba(0,0,0,0.08)';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            if (isSecond) {
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(endX, endY, 5, 0, 2*Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function toggleRealTime() {
+            if (isRealTime) {
+                if (realTimeInterval) clearInterval(realTimeInterval);
+                realTimeInterval = null;
+                isRealTime = false;
+                document.getElementById('realTimeBtn').textContent = '▶ လက်ရှိ';
+                canvas.style.cursor = 'grab';
+            } else {
+                isRealTime = true;
+                document.getElementById('realTimeBtn').textContent = '⏸ ရပ်ရန်';
+                canvas.style.cursor = 'default';
+                updateRealTime();
+                realTimeInterval = setInterval(updateRealTime, 1000);
+            }
+        }
+
+        function updateRealTime() {
+            if (!isRealTime) return;
+            const now = getCurrentTime();
+            setTime(now.hours, now.minutes, now.seconds);
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active-mode', btn.dataset.mode === mode);
+            });
+            const extra = document.getElementById('extraInfo');
+            const frac = document.getElementById('fractionInfo');
+            if (mode === 'angles') {
+                extra.style.display = 'inline-flex';
+                frac.style.display = 'none';
+                showAngleArc = true;
+            } else if (mode === 'fractions') {
+                extra.style.display = 'none';
+                frac.style.display = 'inline-flex';
+                showAngleArc = false;
+            } else {
+                extra.style.display = 'none';
+                frac.style.display = 'none';
+                showAngleArc = false;
+            }
+            if (mode === 'style') {
+                colors.face = '#fef9e7';
+                colors.numbers = '#78350f';
+                colors.hourHand = '#b91c1c';
+                colors.minuteHand = '#1d4ed8';
+                colors.secondHand = '#eab308';
+            } else {
+                colors.face = '#ffffff';
+                colors.numbers = '#1e293b';
+                colors.hourHand = '#1e3a5f';
+                colors.minuteHand = '#2563eb';
+                colors.secondHand = '#dc2626';
+            }
+            drawClock();
+        }
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+
+        function handleStart(e) {
+            e.preventDefault();
+            if (isRealTime) return;
+            const { x, y } = getCanvasCoords(e);
+            const cx = canvas.width/2, cy = canvas.height/2;
+            const dx = x - cx, dy = y - cy;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const radius = Math.min(canvas.width, canvas.height) * 0.43;
+            const tolerance = 30;
+
+            if (dist < radius * 0.52 + tolerance && dist > radius * 0.52 - tolerance) dragTarget = 'hour';
+            else if (dist < radius * 0.70 + tolerance && dist > radius * 0.70 - tolerance) dragTarget = 'minute';
+            else if (dist < radius * 0.82 + tolerance && dist > radius * 0.82 - tolerance) dragTarget = 'second';
+            else { dragTarget = null; return; }
+            isDragging = true;
+            canvas.style.cursor = 'grabbing';
+        }
+
+        function handleMove(e) {
+            if (!isDragging || !dragTarget || isRealTime) return;
+            e.preventDefault();
+            const { x, y } = getCanvasCoords(e);
+            const cx = canvas.width/2, cy = canvas.height/2;
+            let angle = Math.atan2(y - cy, x - cx) * 180 / Math.PI + 90;
+            if (angle < 0) angle += 360;
+
+            if (dragTarget === 'hour') {
+                hourDeg = angle;
+            } else if (dragTarget === 'minute') {
+                minuteDeg = angle;
+                updateHourHandFromMinute(minuteDeg);
+            } else if (dragTarget === 'second') {
+                secondDeg = angle;
+            }
+
+            drawClock();
+            const time = getTimeFromDegrees();
+            updateDigitalDisplay(time.h, time.m, time.s);
+            updateInfoPanel(time.h, time.m, time.s);
+            // စာဖြင့်ဖော်ပြရန် (မိနစ်အတိအကျ)
+            timeInWords.textContent = getTimeInWords(time.h, time.m);
+        }
+
+        function handleEnd(e) {
+            if (isDragging) {
+                isDragging = false;
+                dragTarget = null;
+                canvas.style.cursor = 'grab';
+            }
+        }
+
+        function init() {
+            document.getElementById('realTimeBtn').addEventListener('click', toggleRealTime);
+            document.getElementById('randomBtn').addEventListener('click', () => {
+                if (isRealTime) toggleRealTime();
+                setRandomTime();
+            });
+            document.getElementById('resetBtn').addEventListener('click', resetClock);
+
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => setMode(btn.dataset.mode));
+            });
+
+            canvas.addEventListener('mousedown', handleStart);
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', handleEnd);
+
+            canvas.addEventListener('touchstart', handleStart, {passive: false});
+            window.addEventListener('touchmove', handleMove, {passive: false});
+            window.addEventListener('touchend', handleEnd);
+
+            resetClock();
+            setMode('time');
+        }
+
+        init();
+    })();
+</script>
+
+</body>
+</html>
